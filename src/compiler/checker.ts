@@ -315,6 +315,7 @@ namespace ts {
         const noImplicitThis = getStrictOptionValue(compilerOptions, "noImplicitThis");
         const keyofStringsOnly = !!compilerOptions.keyofStringsOnly;
         const freshObjectLiteralFlag = compilerOptions.suppressExcessPropertyErrors ? 0 : ObjectFlags.FreshLiteral;
+        const noAny = getUltraOptionValue(compilerOptions, "noAny");
 
         const emitResolver = createResolver();
         const nodeBuilder = createNodeBuilder();
@@ -636,7 +637,6 @@ namespace ts {
         const unknownSymbol = createSymbol(SymbolFlags.Property, "unknown" as __String);
         const resolvingSymbol = createSymbol(0, InternalSymbolName.Resolving);
 
-        const anyType = createIntrinsicType(TypeFlags.Any, "any");
         const autoType = createIntrinsicType(TypeFlags.Any, "any");
         const wildcardType = createIntrinsicType(TypeFlags.Any, "any");
         const errorType = createIntrinsicType(TypeFlags.Any, "error");
@@ -652,6 +652,8 @@ namespace ts {
         const regularFalseType = createIntrinsicType(TypeFlags.BooleanLiteral, "false") as FreshableIntrinsicType;
         const trueType = createIntrinsicType(TypeFlags.BooleanLiteral, "true") as FreshableIntrinsicType;
         const regularTrueType = createIntrinsicType(TypeFlags.BooleanLiteral, "true") as FreshableIntrinsicType;
+        const anyType = noAny ? unknownType : createIntrinsicType(TypeFlags.Any, "any");
+
         trueType.regularType = regularTrueType;
         trueType.freshType = trueType;
         regularTrueType.regularType = regularTrueType;

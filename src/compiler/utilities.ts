@@ -7406,9 +7406,14 @@ namespace ts {
     }
 
     export type StrictOptionName = "noImplicitAny" | "noImplicitThis" | "strictNullChecks" | "strictFunctionTypes" | "strictBindCallApply" | "strictPropertyInitialization" | "alwaysStrict";
+    export type UltraOptionName = "noAny";
 
     export function getStrictOptionValue(compilerOptions: CompilerOptions, flag: StrictOptionName): boolean {
         return compilerOptions[flag] === undefined ? !!compilerOptions.strict : !!compilerOptions[flag];
+    }
+
+    export function getUltraOptionValue(compilerOptions: CompilerOptions, flag: UltraOptionName): boolean {
+        return compilerOptions[flag] === undefined ? !!compilerOptions.ultra : !!compilerOptions[flag];
     }
 
     export function compilerOptionsAffectSemanticDiagnostics(newOptions: CompilerOptions, oldOptions: CompilerOptions): boolean {
