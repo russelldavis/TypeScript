@@ -365,6 +365,13 @@ interface NewableFunction extends Function {
     bind<AX, R>(this: new (...args: AX[]) => R, thisArg: any, ...args: AX[]): new (...args: AX[]) => R;
 }
 
+/**
+ * This is used for the 'constructor' property of all class instances, to remove all constructors
+ * (which aren't always compatible in subclasses) and provide a callable interface, compatible
+ * 
+ */
+type SafeStatics<T> = Omit<T, 'new'> & Function;
+
 interface IArguments {
     [index: number]: any;
     length: number;

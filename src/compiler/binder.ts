@@ -3048,6 +3048,35 @@ namespace ts {
             }
             symbol.exports!.set(prototypeSymbol.escapedName, prototypeSymbol);
             prototypeSymbol.parent = symbol;
+
+            // Similarly, set up an automatic instance property named 'constructor', the type of
+            // which is the static interface of the class, minus the constructors (since in general
+            // they aren't actually compatible in subclasses).
+            // look at immediate parent, if it's Object, or if it has our own special constructor prop, then add a new special constructor prop
+            const constructorName = "constructor" as __String;
+            if (!symbol.members!.has(constructorName)) {
+                const base = getClassExtendsHeritageElement(node);
+                let shouldAdd = true;
+                // let baseConstructorSymbol;
+                // let bbb = base && (
+                //     !(baseConstructorSymbol = base.symbol && base.symbol.members!.get(constructorName)) ||
+                //     !(baseConstructorSymbol.flags & SymbolFlags.ConstructorProperty))
+                // )
+                          
+                // if (!baseConstructorSymbol || !(baseConstructorSymbol.flags & SymbolFlags.ConstructorProperty)) {
+
+                if (base) {
+                    const baseConstructorSymbol = base.symbol && base.symbol.members!.get(constructorName);
+                    if (!baseConstructorSymbol || !(baseConstructorSymbol.flags & SymbolFlags.ConstructorProperty)) {
+                        shouldAdd = false;
+                    }
+                }
+                if (shouldAdd) {
+                    const constructorSymbol = createSymbol(SymbolFlags.Property | SymbolFlags.ConstructorProperty, constructorName);
+                    constructorSymbol.parent = symbol;
+                    symbol.members!.set(constructorSymbol.escapedName, constructorSymbol);
+                }
+            }
         }
 
         function bindEnumDeclaration(node: EnumDeclaration) {

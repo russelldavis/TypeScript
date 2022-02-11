@@ -819,6 +819,7 @@ namespace ts {
         let deferredGlobalExtractSymbol: Symbol;
         let deferredGlobalOmitSymbol: Symbol;
         let deferredGlobalBigIntType: ObjectType;
+        let deferredGlobalSafeStaticsSymbol: Symbol;
 
         const allPotentiallyUnusedIdentifiers = createMap<PotentiallyUnusedIdentifier[]>(); // key is file name
 
@@ -6602,6 +6603,12 @@ namespace ts {
             return classType.typeParameters ? createTypeReference(<GenericType>classType, map(classType.typeParameters, _ => anyType)) : classType;
         }
 
+        function getTypeOfConstructorProperty(constructorProp: Symbol): Type {
+            // See https://github.com/Microsoft/TypeScript/issues/3841
+            const constructorType = <ObjectType>getTypeOfSymbol(getParentOfSymbol(constructorProp)!);
+            return getGlobalSafeStaticsInstantiation(constructorType);
+        }
+
         // Return the type of the given property in the given type, or undefined if no such property exists
         function getTypeOfPropertyOfType(type: Type, name: __String): Type | undefined {
             const prop = getPropertyOfType(type, name);
@@ -7287,6 +7294,10 @@ namespace ts {
             // Handle prototype property
             if (symbol.flags & SymbolFlags.Prototype) {
                 return getTypeOfPrototypeProperty(symbol);
+            }
+            // Handle constructor property
+            if (symbol.flags & SymbolFlags.ConstructorProperty) {
+                return getTypeOfConstructorProperty(symbol);
             }
             // CommonsJS require and module both have type any.
             if (symbol === requireSymbol) {
@@ -11140,6 +11151,16 @@ namespace ts {
             return deferredGlobalBigIntType || (deferredGlobalBigIntType = getGlobalType("BigInt" as __String, /*arity*/ 0, reportErrors)) || emptyObjectType;
         }
 
+        function getGlobalSafeStaticsInstantiation(type: Type): Type {
+            if (!deferredGlobalSafeStaticsSymbol) {
+                deferredGlobalSafeStaticsSymbol = getGlobalTypeSymbol("SafeStatics" as __String, /* reportErrors */ true) || unknownSymbol;
+            }
+            if (deferredGlobalNonNullableTypeAlias === unknownSymbol) {
+                return errorType;
+            }
+            return getTypeAliasInstantiation(deferredGlobalSafeStaticsSymbol, [type]);
+        }
+
         /**
          * Instantiates a global type that is generic with some element type, and returns that instantiation.
          */
@@ -12718,6 +12739,7 @@ namespace ts {
                 const links = getSymbolLinks(symbol);
                 return links.uniqueESSymbolType || (links.uniqueESSymbolType = createUniqueESSymbolType(symbol));
             }
+            
             return esSymbolType;
         }
 
